@@ -22,6 +22,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer-data:/data
+    container_name: portainer
     labels:
       - "traefik.docker.network=mrtg-net"
       - "traefik.enable=true"
