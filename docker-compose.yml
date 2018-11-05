@@ -1,0 +1,37 @@
+version: '2'
+
+services:
+  traefik:
+    image: traefik:1.5.4
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - mrtg-net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /traefik.toml:/traefik.toml
+      - /acme.json:/acme.json
+    container_name: traefik
+  portainer:
+    image: portainer/portainer
+    ports:
+      - "9000:9000"
+    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    labels:
+      - "traefik.docker.network=mrtg-net"
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:portainer.mrtg.stream"
+      - "traefik.port=3000"
+      - "traefik.backend=portainer"
+
+networks:
+  mrtg-net:
+    external: true
+
+volumes:
+  portainer-data:
