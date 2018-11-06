@@ -11,13 +11,15 @@ services:
       - mrtg-net
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /traefik.toml:/traefik.toml
-      - /acme.json:/acme.json
+      - ./traefik.toml:/traefik.toml
+      - ./acme.json:/acme.json
     container_name: traefik
   portainer:
     image: portainer/portainer
     ports:
       - "9000:9000"
+    networks:
+      - mrtg-net
     command: -H unix:///var/run/docker.sock
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -27,8 +29,31 @@ services:
       - "traefik.docker.network=mrtg-net"
       - "traefik.enable=true"
       - "traefik.frontend.rule=Host:portainer.mrtg.stream"
-      - "traefik.port=3000"
+      - "traefik.port=9000"
       - "traefik.backend=portainer"
+  postgres:
+    image: postgres
+    restart: always
+    networks:
+      - mrtg-net
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    env_file:
+      - "5432"
+  adminer:
+    image: adminer
+    restart: always
+    networks:
+      - mrtg-net
+    labels:
+      - "traefik.docker.network=mrtg-net"
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:adminer.mrtg.stream"
+      - "traefik.port=8080"
+      - "traefik.backend=adminer"
+    ports:
+      - "8080:8080"
 
 networks:
   mrtg-net:
@@ -36,3 +61,5 @@ networks:
 
 volumes:
   portainer-data:
+  postgres-data:
+    external: true
